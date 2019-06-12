@@ -1058,7 +1058,7 @@ Ya vemos que en cada caso importan unas variables y no otras. En general la clas
 
 Hemos vuelto a superar nuestra nota, un **_82'22%_** ya acariciamos el techo del *Leaderboard*. ¿Dará tiempo a un último intento?...
 
-## 6º Sprint - Ensamblado
+## 7º Sprint - Ensamblado
 
 # Conclusiones
 Ha sido una experiencia muy estimulante la de entrar en una competición de estas con la metodología que está más en boga y compitiendo entre nosotros. Enhorabuena Carlos porque eres capaz de transmitir todo lo que nos queda por aprender (yo al empezar el máster desconocía totalmente Vim y R y mucho de la parte teórica) y lo divertido que puede llegar a ser dedicarse a esto.
