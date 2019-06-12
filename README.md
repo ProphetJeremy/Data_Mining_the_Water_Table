@@ -1,6 +1,7 @@
 # Pump it Up: Data Mining the Water Table
 
 This repository corresponds to a module of my master in BigData and Business Analytics at UCM.
+
 In this module we learnt how to apply Agile methodology to a [ML compentition](https://www.drivendata.org/competitions/7/pump-it-up-data-mining-the-water-table) getting into a team and trying to beat our mates getting the highest score.
 
 The files structure is kind of self-explanatory but I will show some details:
