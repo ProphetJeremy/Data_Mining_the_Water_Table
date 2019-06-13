@@ -1,5 +1,5 @@
 ###########################################################
-# Competición: 
+# Competición:
 # Etapa: Primer modelo
 # Característica: RandomForest - RANGER
 # Resultado: 0.8180
@@ -29,16 +29,16 @@ datTrain<- inner_join(datTotal, datY)
 datTest<- datTotal[datTotal$id %in% submiss$id,]
 
 # 1.1 Data treatment using vtreat ----
-x_names <- c("funder", "installer", "wpt_name", "basin", "subvillage", "region", 
-             "lga", "ward", "scheme_management", "scheme_name", "extraction_type", 
-             "extraction_type_group", "extraction_type_class", "management", 
-             "management_group", "payment_type", "water_quality", "quality_group", 
-             "quantity", "quantity_group", "source", "source_type", "source_class", 
-             "waterpoint_type", "waterpoint_type_group", "id", "gps_height", 
-             "longitude", "latitude", "region_code", "district_code", "population", 
-             "construction_year", "public_meeting", "permit", "num_private_bin", 
-             "amount_tsh_bin", "year_recorded", "month_recorded", "day_recorded", 
-             "regcode_by_region", "region_by_regcode", "distcode_by_subv", 
+x_names <- c("funder", "installer", "wpt_name", "basin", "subvillage", "region",
+             "lga", "ward", "scheme_management", "scheme_name", "extraction_type",
+             "extraction_type_group", "extraction_type_class", "management",
+             "management_group", "payment_type", "water_quality", "quality_group",
+             "quantity", "quantity_group", "source", "source_type", "source_class",
+             "waterpoint_type", "waterpoint_type_group", "id", "gps_height",
+             "longitude", "latitude", "region_code", "district_code", "population",
+             "construction_year", "public_meeting", "permit", "num_private_bin",
+             "amount_tsh_bin", "year_recorded", "month_recorded", "day_recorded",
+             "regcode_by_region", "region_by_regcode", "distcode_by_subv",
              "subv_by_distcode")
 y_name <- "status_group"
 
@@ -82,7 +82,7 @@ for(obj in posibilities){
                       importance = "impurity")
     print(paste(obj, " - 2. Error predicciones: ", my_mod_2$prediction.error, sep = ""))
     saveRDS(my_mod_2, paste("./mod/V07_ranger_2_",obj, sep = ""))
-    
+
     # 3. Prediction ----
     # Step 1
     predicted<- predict(my_mod_1, datTest)
@@ -108,14 +108,14 @@ for(obj in posibilities){
     # 3.1 Join Results ----
     predictionsDF[[paste(obj,"_id",sep="")]] <- pred$id
     predictionsDF[[obj]] <- pred$status_group
-} 
+}
 
 # Checking they have all the same ids ----
 all(predictionsDF$functional_id == predictionsDF$`non functional_id`) # TRUE
 all(predictionsDF$functional_id == predictionsDF$`functional needs repair_id`) # TRUE
 
 # 4. Ensemble ----
-# Split individual dfs 
+# Split individual dfs
 pred<- predictionsDF[,c(1,2)]
 pred_functional<- pred %>%
     rename(status_group = functional) %>%
@@ -143,18 +143,18 @@ aux<- melt(pred_to_melt, id.vars="id")
 aux$variable<- NULL
 length(unique(aux$id))
 upvoted<- as.data.frame(aux %>%
-                            add_count(id, value) %>% 
+                            add_count(id, value) %>%
                             filter(n > 1) %>%
                             distinct(id, value)
 )
 onevoted<- as.vector(aux %>%
-                         add_count(id, value) %>% 
+                         add_count(id, value) %>%
                          filter(n == 1) %>%
-                         distinct(id) %>% 
+                         distinct(id) %>%
                          select(id)
 )
 noclue<- anti_join(onevoted, upvoted)
-# For the 15 rows that models differs we trust non functional which seems to be the best 
+# For the 15 rows that models differs we trust non functional which seems to be the best
 aux<- data.frame(id = noclue,
                  value = pred_non_functional$status_group[pred_non_functional$id %in% noclue$id])
 voted<- rbind(upvoted, aux)

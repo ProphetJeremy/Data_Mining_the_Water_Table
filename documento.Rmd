@@ -3,7 +3,7 @@ title: "BigData Aplicado a la Empresa"
 author: "Santiago B. Pérez Pita - <santibreo@gmail.com>"
 date:     "`r Sys.Date()`"
 output:
-  html_document: 
+  html_document:
     theme: yeti  # "default", "cerulean", "journal", "flatly", "readable", "spacelab", "united", "cosmo", "lumen", "paper", "sandstone", "simplex", "yeti"
     highlight:    tango  # "default", "tango", "pygments", "kate", "monochrome", "espresso", "zenburn", "haddock", "textmate"
     css: ./html/add.css
@@ -107,7 +107,7 @@ No hemos incluido ninguna variable transformada (creo que `vtreat` tan solo ha i
 
 Hay muchos valores que son _missings_ disfrazados y que no se han explorado (los ceros de `longitude` y `latitude`, etc).
 
-Sería interesante probar algún modelo de otra familia (regresión logística, *gradient boosting*, *support vector machines* o _naive_ bayes) y usar la librería `caret` para conrolar la variabilidad y el sesgo de nuestros modelos. 
+Sería interesante probar algún modelo de otra familia (regresión logística, *gradient boosting*, *support vector machines* o _naive_ bayes) y usar la librería `caret` para conrolar la variabilidad y el sesgo de nuestros modelos.
 
 # El proceso
 Ahora voy a tratar de narrar el proceso de la forma más detallada posible, aunque posiblemente olvide alguna cosa. Si tu idea es profundizar en como logré la mejor marca, avanza hasta el [6º _sprint_.](#best)  
@@ -132,7 +132,7 @@ dt<- data.frame(row.names=tareas,
                 Ester = tarea(length(tareas), 5),
                 Bea = tarea(length(tareas), 4)
 )
-   
+
 kable(dt,  align = "c") %>%
   kable_styling("striped", full_width = F) %>%
   pack_rows("Datos", 1, 8) %>%
@@ -195,8 +195,8 @@ varDescription$is_Boo<- varDescription$name %in% varBoo
 varResume<- varDescription[order(varDescription$n_NANs, varDescription$clase),
                            c(1,2,3,4,5,7,10,11,6)]
 treat<- c("amount_tsh", "date_recorded", "funder",
-          "installer", "wpt_name", "subvillage", 
-          "lga", "ward", "public_meeting", "recorded_by", 
+          "installer", "wpt_name", "subvillage",
+          "lga", "ward", "public_meeting", "recorded_by",
           "scheme_name", "permit", "construction_year",
           "payment", "payment_type")
 varResume$Tratamiento<- if_else(varResume$name %in% treat, "SI", "NO")
@@ -219,11 +219,11 @@ kable(dt,  align = "c", digits = c(2,2), row.names=FALSE) %>%
     pack_rows("Logicas / Binarias", 39, 40)
 ```
 
-Así podemos ver de una forma bastante cómoda las categorías de las variables y sus características principales (número de _missing_, número de categorías, principales medidas de las numéricas y si requiere tratamiento). 
+Así podemos ver de una forma bastante cómoda las categorías de las variables y sus características principales (número de _missing_, número de categorías, principales medidas de las numéricas y si requiere tratamiento).
 Para rellenar la columna `Tratamiento` hemos tomado en consideración únicamente si aparecían valores ilógicos, si presentaba demasiadas categorías, si hay patrones extraños y si presenta _missings_.
 De esta forma hemos notado los siguientes aspectos a resaltar:
 
-+ `amount_tsh`: Presenta un rango muy amplio para su media. 
++ `amount_tsh`: Presenta un rango muy amplio para su media.
 + `date_recorded`: Debe ser tratada como fecha, extrayendo la información relevante.
 + `gps_height`: Pesenta un mínimo negartivo, aunque podría ser válido, combiene cotejar.
 + `wpt_name`: 45684 categorías sin _missings_, posiblemente las bombas sin nombre sean cadenas de caracteres vacías.
@@ -240,7 +240,7 @@ Para definir este modelo lo primero que hemos hecho es seleccionar de los datos 
 # 1. Load data ----
 datZero<- readRDS("./dat/datZero")
 datY<- as.data.frame(fread("./dat/rawTrain_y.csv"))
-submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv")) 
+submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv"))
 datTrain<- inner_join(datZero, datY)
 datTest<- datZero[datZero$id %in% submiss$id,]
 str(datTrain)
@@ -301,7 +301,7 @@ Aún en este _sprint_ vamos a dejar los datos como los tenemos, y vamos a probar
 # 1. Load data ----
 datZero<- readRDS("./dat/datZero")
 datY<- as.data.frame(fread("./dat/rawTrain_y.csv"))
-submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv")) 
+submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv"))
 datTrain<- inner_join(datZero, datY)
 datTest<- datZero[datZero$id %in% submiss$id,]
 datTrain$status_group<- as.factor(datTrain$status_group)
@@ -385,7 +385,7 @@ source("funciones.R")
 # 1. Load data ----
 datTotal<- readRDS("./dat/datTotal")
 datY<- as.data.frame(fread("./dat/rawTrain_y.csv"))
-submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv")) 
+submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv"))
 datTrain<- inner_join(datTotal, datY)
 datTest<- datTotal[datTotal$id %in% submiss$id,]
 datTrain$status_group<- as.factor(datTrain$status_group)
@@ -393,7 +393,7 @@ datTrain$status_group<- as.factor(datTrain$status_group)
 # 1.1 Solve our questions ----
 # Have payment and pyment_tupe the same info?
 aux<- as.data.frame(datTotal %>%
-                  group_by(payment_type) %>% 
+                  group_by(payment_type) %>%
                   summarise(count = n_distinct(payment))
 )
 saveRDS(aux, "./dat/payment")
@@ -496,7 +496,7 @@ my_mod_sin<- ranger(frml,
                     data = datTrain,
                     importance = "impurity")
 
-# 2.1 Model Comparison ---- 
+# 2.1 Model Comparison ----
 # Importancia de las variables
 aux<- as.data.frame(my_mod_con$variable.importance)
 aux$id<- rownames(aux)
@@ -590,7 +590,7 @@ Como las variables lógicas son las únicas que incorporan datos _missing_ empez
 # 1. Load data ----
 datTotal<- readRDS("./dat/datTotal")
 datY<- as.data.frame(fread("./dat/rawTrain_y.csv"))
-submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv")) 
+submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv"))
 datTrain<- inner_join(datTotal, datY)
 datTrain$status_group<- as.factor(datTrain$status_group)
 datTest<- datTotal[datTotal$id %in% submiss$id,]
@@ -602,24 +602,24 @@ ggplot(data=aux)+
                 na.rm=TRUE, offset = 0.04, divider=ddecker()) +
     theme_update(plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
                  axis.text.x = element_text(angle = 30, hjust = 1)) +
-    ggtitle("Mosaico public_meeting - permit") + 
+    ggtitle("Mosaico public_meeting - permit") +
     xlab("permit") +
     ylab("public_meeting")
 
 print(aux %>%
           group_by(status_group, permit, public_meeting) %>%
-          summarise(N = n()) %>% 
+          summarise(N = n()) %>%
           mutate(freq = N / sum(N)),
       n=27)
 
 print(aux %>%
           group_by(status_group, public_meeting, permit) %>%
-          summarise(N = n()) %>% 
+          summarise(N = n()) %>%
           mutate(freq = N / sum(N)),
       n=27)
 print(aux %>%
           group_by(public_meeting, permit) %>%
-          summarise(N = n()) %>% 
+          summarise(N = n()) %>%
           mutate(freq = N / sum(N)))
 ```
 <center>
@@ -627,9 +627,9 @@ print(aux %>%
 </center>
 <br>
 
-Vemos que el reparto en `public_meeting` difiere muy poco, 7% de observaciones son `functional` son `r FALSE` y un 88% `r TRUE`, para `functional needs repair` la relación es 10% - 86% y para `non functional` 11% - 82%. Para `permit` tampoco hay grandes diferencias, en `functional` 28% - 67%, en `functional needs repair` 30% - 63% y en `non functional` 31% - 64% (las relaciones siempre son `r FALSE` - `r TRUE`); el resto son _missings_. 
+Vemos que el reparto en `public_meeting` difiere muy poco, 7% de observaciones son `functional` son `r FALSE` y un 88% `r TRUE`, para `functional needs repair` la relación es 10% - 86% y para `non functional` 11% - 82%. Para `permit` tampoco hay grandes diferencias, en `functional` 28% - 67%, en `functional needs repair` 30% - 63% y en `non functional` 31% - 64% (las relaciones siempre son `r FALSE` - `r TRUE`); el resto son _missings_.
 
-Para inputar los valores _missings_ hemos usado un procedimiento de cierta complejidad, así que lo explico únicamente para `permit` ya que para `public_meeting` lo repetimos. Primero vimos como se distribuían las variables numéricas más relevantes con respecto a 
+Para inputar los valores _missings_ hemos usado un procedimiento de cierta complejidad, así que lo explico únicamente para `permit` ya que para `public_meeting` lo repetimos. Primero vimos como se distribuían las variables numéricas más relevantes con respecto a
 la variable que queremos inputar, obteniendo gráficos del siguiente estilo:
 ```{r eval=FALSE}
 # Input missing values
@@ -656,40 +656,40 @@ summary(datTotal)
 
 Hemos mirado cual de ellas es la que parece discriminar mejor las categorías `r TRUE` y `r FALSE` conservando información de la variable objetivo. Hemos generado una función que divide esta variable numérica en `n` grupos (haciendo cortes) y para cada grupo calcula la frecuencia acumulada de categorías, calcula el grupo al que pertenece cada valor _missing_ en los datos y le asigna un valor aleatorio (uniforme entre 0 y 1), finalmente reemplaza el missing por el valor que correspondería a una frecuencia representada por el aleatorio dentro del grupo. De esta forma se conserva la distribución de categorías y se asocia a cada dato _missing_ un valor similar al de las observaciones con valores de la variable numérica similares.
 
-En nuestro caso hemos usado para inputar tanto en `permit` como en `public_meeting` la variable `latitude` y hemos visto que las frecuencias relativas de verdaderos y falsos se conservaban. 
+En nuestro caso hemos usado para inputar tanto en `permit` como en `public_meeting` la variable `latitude` y hemos visto que las frecuencias relativas de verdaderos y falsos se conservaban.
 
 Ahora vamos a ocuparnos de las últimas dos variables numéricas que no hemos incorporado y que son `region_code` y `district_code` primero miramos si `region` y `region_code` contienen la misma información y descrubrimos que es prácticamente la misma, únicamente unas pocas regiones como *Arusha*, *Lindi*, *Mtwara* y otras 4 contienen 2 o 3 `region_code` diferentes. Si hacemos lo mismo para `region_code` encontramos 6 códigos repetidos. Voy a incorporar `region_code` al modelo como está y dependiendo de como quede en cuanto a relevancia con respecto a `region` tomaremos una decisión.
 ```{r eval=FALSE}
 # What to do with numeric variables
 # region_code
 print(datTotal %>%
-          group_by(region) %>% 
+          group_by(region) %>%
           summarise(count = n_distinct(region_code)) %>%
           filter(count > 1),
       n=21)
 
 print(datTotal %>%
-          group_by(region_code) %>% 
-          summarise(count = n_distinct(region)) %>% 
+          group_by(region_code) %>%
+          summarise(count = n_distinct(region)) %>%
           filter(count > 1),
       n=27)
 # district_code
 print(datTotal %>%
-          group_by(subvillage) %>% 
-          summarise(count = n_distinct(district_code)) %>% 
+          group_by(subvillage) %>%
+          summarise(count = n_distinct(district_code)) %>%
           filter(count > 1),
       n=27)
 
 print(datTotal %>%
-          group_by(district_code) %>% 
-          summarise(count = n_distinct(subvillage)) %>% 
+          group_by(district_code) %>%
+          summarise(count = n_distinct(subvillage)) %>%
           filter(count > 1),
       n=27)
 
 # 2.3 Add new variables ----
 # Códigos por región - factor
 code_by_region<- as.data.frame(datTotal %>%
-                                   group_by(region) %>% 
+                                   group_by(region) %>%
                                    summarise(count = n_distinct(region_code))
 )
 datTotal$regcode_by_region<- as.factor(
@@ -697,7 +697,7 @@ datTotal$regcode_by_region<- as.factor(
 )
 # Regiones por código - factor
 region_by_code<- as.data.frame(datTotal %>%
-                                   group_by(region_code) %>% 
+                                   group_by(region_code) %>%
                                    summarise(count = n_distinct(region))
 )
 datTotal$region_by_regcode<- as.factor(
@@ -708,7 +708,7 @@ datTotal$region_by_regcode<- as.factor(
 )
 # Distritos por pueblo - factor
 code_by_subv<- as.data.frame(datTotal %>%
-                                 group_by(subvillage) %>% 
+                                 group_by(subvillage) %>%
                                  summarise(count = n_distinct(district_code))
 )
 datTotal$distcode_by_subv<- as.factor(
@@ -716,7 +716,7 @@ datTotal$distcode_by_subv<- as.factor(
 )
 # Pueblos por distrito - numérica
 subv_by_code<- as.data.frame(datTotal %>%
-                                 group_by(district_code) %>% 
+                                 group_by(district_code) %>%
                                  summarise(count = n_distinct(subvillage))
 )
 datTotal$subv_by_distcode<- subv_by_code$count[
@@ -742,7 +742,7 @@ kable(dt,  align = "c", digits = c(2,2), row.names=FALSE) %>%
 
 Ya solo nos quedan por tratar las variables que presentan categorías en exceso. No podemos eludir que no hemos tratado los falsos _missing_, que hay en variables como las geográficas, que presentan multitud de ceros, y muchas otras, cuyas distribuciones hacen pensar que ocurre cosa similar. No obstante estamos en una simulación de **_Agile_** con _sprints_ cortos, y a ese nivel de análisis probablemente no lleguemos (al fin y al cabo esto han sido 10 horas, más alguna otra que le hemos echado en casa (algunas muchas)). Dicho esto, como ya viene siendo costumbre, incorporamos todas las variables marcadas como que no requieren tratamiento y procedemos a hacer un modelo.
 
-Es interesante mirar como quedan dispuestas por importancia las variables, para cotejar que las nuevas que hemos creado no son inútiles, y efectivamente las que relacionan el código de distrito con `subvillage` se sitúan en la zona central de la tabla, sin embargo, las que relacionan `region` y `region_code` aparecen a la cola, no obstante, como mejoran bastante con respecto a la importancia de `num_private`, las vamos a dejar. 
+Es interesante mirar como quedan dispuestas por importancia las variables, para cotejar que las nuevas que hemos creado no son inútiles, y efectivamente las que relacionan el código de distrito con `subvillage` se sitúan en la zona central de la tabla, sin embargo, las que relacionan `region` y `region_code` aparecen a la cola, no obstante, como mejoran bastante con respecto a la importancia de `num_private`, las vamos a dejar.
 ```{r eval=FALSE}
 # 1.3 New datasets ----
 datTwo<- datTotal[,varResume$name[varResume$Tratamiento=="NO"]]
@@ -819,7 +819,7 @@ source("funciones.R")
 # 1. Load data ----
 datTotal<- readRDS("./dat/datTotal_2")
 datY<- as.data.frame(fread("./dat/rawTrain_y.csv"))
-submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv")) 
+submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv"))
 datTrain<- inner_join(datTotal, datY)
 datTrain$status_group<- as.factor(datTrain$status_group)
 datTest<- datTotal[datTotal$id %in% submiss$id,]
@@ -829,7 +829,7 @@ varResume<- readRDS("./dat/varResume_2")
 treat_cols<- varResume$name[varResume$Tratamiento=="SI"]
 for(col in treat_cols){
     cat_count<- as.data.frame(datTotal %>%
-                                  group_by(!!sym(col)) %>% 
+                                  group_by(!!sym(col)) %>%
                                   summarise(count = n_distinct(id))
     )
     datTotal[[col]]<- as.numeric(cat_count$count[match(datTotal[[col]],cat_count[[col]])])    
@@ -1104,16 +1104,16 @@ datTrain<- inner_join(datTotal, datY)
 datTest<- datTotal[datTotal$id %in% submiss$id,]
 
 # 1.1 Data treatment using vtreat ----
-x_names <- c("funder", "installer", "wpt_name", "basin", "subvillage", "region", 
-             "lga", "ward", "scheme_management", "scheme_name", "extraction_type", 
-             "extraction_type_group", "extraction_type_class", "management", 
-             "management_group", "payment_type", "water_quality", "quality_group", 
-             "quantity", "quantity_group", "source", "source_type", "source_class", 
-             "waterpoint_type", "waterpoint_type_group", "id", "gps_height", 
-             "longitude", "latitude", "region_code", "district_code", "population", 
-             "construction_year", "public_meeting", "permit", "num_private_bin", 
-             "amount_tsh_bin", "year_recorded", "month_recorded", "day_recorded", 
-             "regcode_by_region", "region_by_regcode", "distcode_by_subv", 
+x_names <- c("funder", "installer", "wpt_name", "basin", "subvillage", "region",
+             "lga", "ward", "scheme_management", "scheme_name", "extraction_type",
+             "extraction_type_group", "extraction_type_class", "management",
+             "management_group", "payment_type", "water_quality", "quality_group",
+             "quantity", "quantity_group", "source", "source_type", "source_class",
+             "waterpoint_type", "waterpoint_type_group", "id", "gps_height",
+             "longitude", "latitude", "region_code", "district_code", "population",
+             "construction_year", "public_meeting", "permit", "num_private_bin",
+             "amount_tsh_bin", "year_recorded", "month_recorded", "day_recorded",
+             "regcode_by_region", "region_by_regcode", "distcode_by_subv",
              "subv_by_distcode")
 y_name <- "status_group"
 
@@ -1162,7 +1162,7 @@ for(obj in posibilities){
                       importance = "impurity")
     print(paste(obj, " - 2. Error predicciones: ", my_mod_2$prediction.error, sep = ""))
     saveRDS(my_mod_2, paste("./mod/V07_ranger_2_",obj, sep = ""))
-    
+
     # 3. Prediction ----
     # Step 1
     predicted<- predict(my_mod_1, datTest)
@@ -1188,7 +1188,7 @@ for(obj in posibilities){
     # 3.1 Join Results ----
     predictionsDF[[paste(obj,"_id",sep="")]] <- pred$id
     predictionsDF[[obj]] <- pred$status_group
-} 
+}
 ```
 
 En general la tasa de errores es bastante baja, pero mayor a la que observamos en el _sprint_ anterior. Subi las predicciones del modelo asociado a la clase `functional` y obtuve un pobre _**81'27%**_ y con el asociado a `functional needs repair` __*81'58%*__. Pensándolo ahora en frío tal vez esto debió disuadirme de continuar, pero pocas cosas hay más tercas que yo mismo. Teniendo las predicciones de los 3 (6) modelos hice la clásica votación, seleccioné la clase más votada en cada caso y de aquellos en que cada modelo había dicho una cosa (había únicamente 15) elegí la predicción hecha por el modelo asociado a `non functional`. Con estos criterios me dispuse a hacer mi última predicción (la 3º del día de la entrega).
@@ -1198,7 +1198,7 @@ all(predictionsDF$functional_id == predictionsDF$`non functional_id`) # TRUE
 all(predictionsDF$functional_id == predictionsDF$`functional needs repair_id`) # TRUE
 
 # 4. Ensemble ----
-# Split individual dfs 
+# Split individual dfs
 pred<- predictionsDF[,c(1,2)]
 pred_functional<- pred %>%
     rename(status_group = functional) %>%
@@ -1226,18 +1226,18 @@ aux<- melt(pred_to_melt, id.vars="id")
 aux$variable<- NULL
 length(unique(aux$id))
 upvoted<- as.data.frame(aux %>%
-                            add_count(id, value) %>% 
+                            add_count(id, value) %>%
                             filter(n > 1) %>%
                             distinct(id, value)
 )
 onevoted<- as.vector(aux %>%
-                         add_count(id, value) %>% 
+                         add_count(id, value) %>%
                          filter(n == 1) %>%
-                         distinct(id) %>% 
+                         distinct(id) %>%
                          select(id)
 )
 noclue<- anti_join(onevoted, upvoted)
-# For the 15 rows that models differs we trust non functional which seems to be the best 
+# For the 15 rows that models differs we trust non functional which seems to be the best
 aux<- data.frame(id = noclue,
                  value = pred_non_functional$status_group[pred_non_functional$id %in% noclue$id])
 voted<- rbind(upvoted, aux)
