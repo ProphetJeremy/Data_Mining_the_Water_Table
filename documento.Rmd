@@ -10,7 +10,7 @@ output:
     toc:          true
     toc_float:    true
     toc_depth: 2
-    code_folding: hide
+    code_folding: show
     df_print: paged
     includes:
       after_body: ./html/footer.html
@@ -83,8 +83,35 @@ La descripción de las variables es la siguiente:
 
 Esta es la información que aporta la propia página sobre las variables, como vemos hay muchas descripciones repetidas, lo que es un claroindicador de que hay variables que contienen la misma información y hay muchas cuya descripción no resulta especialmente clarificadora.
 
+## Los resultados
+La mejor marca lograda en esta competición ha sido **82'22%** lo que nos sitúa por **encima del percentil 96** y la hemos logrado de la siguiente manera:
+
+ * Eliminando ``recorded_by` porque solo presenta un valor y `payment` por ser redundante con `payment_type`.
+ * Empleando las variables `amount_tsh` y `num_private` como binarias, en función de si valen 0 o no.
+ * Extrayendo de `date_recorded` el, dia, el mes y el año, y usando la primera como numérica y las otras como categóricas.
+ * Inputando los _missings_ de `public_meeting` y `permit` en base a los valores de `latitude` para esas observaciones, con cierto margen de aleatoriedad.
+ * Incorporando las variables:
+    + `regcode_by_region`: Número de `region_code` distintos por `region` (factor).
+    + `region_by_regcode`: Número de `region` distintos por `region_code` (binaria).
+    + `distcode_by_subv`: Número de `district_code` distintos por `subvillage` (factor).
+    + `subv_by_distcode`: Número de `subvillage` diferentes por `district_code` (numérica).
+* Reemplazando las variables categóricas con más de 25 categorías por sus frecuencias.
+* Haciendo un modelo de _random forest_ que discriminase entre la categoría `non functional` y el resto, y luego otro que clasificase el resto.
+
+## Para el futuro
+En primer lugar convendría saber que tal se comporta un árbol sobre los datos tratados con `vtreat`.
+
+La resolución del problema mediante dos clasificadores binarios abre las puertas a la prueba de múltiples algoritmos, incluso a combinaciones de algoritmos de distintas familias, ya que las variables relevantes para discriminar unos conjuntos de otros van cambiando.
+
+No hemos incluido ninguna variable transformada (creo que `vtreat` tan solo ha incorporado _dummies_), este es todo un campo a explorar que según algunos compañeros puede dar lugar a grandes mejoras.
+
+Hay muchos valores que son _missings_ disfrazados y que no se han explorado (los ceros de `longitude` y `latitude`, etc).
+
+Sería interesante probar algún modelo de otra familia (regresión logística, *gradient boosting*, *support vector machines* o _naive_ bayes) y usar la librería `caret` para conrolar la variabilidad y el sesgo de nuestros modelos. 
+
 # El proceso
-Ahora voy a tratar de narrar el proceso de la forma más detallada posible, aunque posiblemente olvide alguna cosa. El esquema que hemos seguido se puede resumir en la siguiente imagen (*siendo las daily meetings hourly meetings*)
+Ahora voy a tratar de narrar el proceso de la forma más detallada posible, aunque posiblemente olvide alguna cosa. Si tu idea es profundizar en como logré la mejor marca, avanza hasta el [6º _sprint_.](#best)  
+El esquema que hemos seguido se puede resumir en la siguiente imagen (*siendo las daily meetings hourly meetings*)
 
 <center>
 <img src="./img/agile.jpg" width="70%">
@@ -177,8 +204,6 @@ varResume$Tratamiento<- if_else(varResume$name %in% treat, "SI", "NO")
 datTotal<- cbind(datTotal_cha, datTotal_num, datTotal_boo)
 datTotal$recorded_by<- NULL
 saveRDS(datTotal, "./dat/datTotal")
-saveRDS(cbind(datY, datTotal[c(1:nrow(datTrain)),]), "./dat/datTrain")
-saveRDS(datTotal[c((nrow(datTrain)+1):nrow(datTotal)),], "./dat/datTest")
 
 # 1.3 Limpieza alto nivel ---
 datZero<- datTotal[,varResume$name[varResume$Tratamiento=="NO"]]
@@ -305,7 +330,7 @@ aux<- as.data.frame(my_mod$confusion.matrix)
 ggplot(data=aux, aes(x=predicted, y=Freq, fill=true))+
     geom_bar(stat="identity", color="black", show.legend = TRUE, alpha=0.5) +
     scale_x_discrete(limits=unique(aux$predicted[order(aux$Freq)])) +
-    coord_flip() + ggtitle("Matriz de confusión")
+    coord_flip() + ggtitle("Matriz de confusion")
 # Error en la predicción
 my_mod$prediction.error
 
@@ -747,7 +772,7 @@ aux<- as.data.frame(my_mod$confusion.matrix)
 conf<- ggplot(data=aux, aes(x=true, y=Freq, fill=predicted))+
     geom_bar(stat="identity", color="black", show.legend = FALSE, alpha=0.5) +
     scale_x_discrete(limits=unique(aux$predicted[order(aux$Freq)])) +
-    ggtitle("Matriz de confusión")
+    ggtitle("Matriz de confusion")
 
 grid.arrange(impo, conf, ncol=2, widths=c(1.3, 1))
 
@@ -882,7 +907,7 @@ aux<- as.data.frame(my_mod$confusion.matrix)
 conf<- ggplot(data=aux, aes(x=true, y=Freq, fill=predicted))+
     geom_bar(stat="identity", color="black", show.legend = FALSE, alpha=0.5) +
     scale_x_discrete(limits=unique(aux$predicted[order(aux$Freq)])) +
-    ggtitle("Matriz de confusión")
+    ggtitle("Matriz de confusion")
 
 grid.arrange(impo, conf, ncol=2, widths=c(1.3, 1))
 
@@ -914,7 +939,7 @@ A la vista de la importancia de las variables hay hueco para la ilusión ya que 
 
 ¡Hemos roto el techo del 82%!, _**82'11%**_ parece una nota aceptable pero como dijo aquel: "lo peor será que cuando llegues querrás saber que hay más allá". Aún hay espacio entre nosotros y el 1.
 
-## 6º Sprint - 2 a 2
+## 6º Sprint - 2 a 2{#best}
 Este _sprint_ fue más bien un impetú irrefrenable y poco fundado que una cosa pensada. El problema de __*Agile*__ es que parece más importante dar con un idea feliz, que avanzar por sendas seguras, aún así, como esto es un cuaderno de bitácora más que otra cosa, aquí se cuenta como tratamos de mejorar la puntuación mediante un modelo en dos etapas. En la primera distingue entre `non functional` y el resto, y de ese resto en la segunda te dice quien es `functional` y quien `functional needs repair` (los datos usados son los mismos del sprint anterior).
 ```{r eval=FALSE}
 # 0. Libraries
@@ -979,7 +1004,7 @@ aux<- as.data.frame(my_mod_1$confusion.matrix)
 conf<- ggplot(data=aux, aes(x=true, y=Freq, fill=predicted))+
     geom_bar(stat="identity", color="black", show.legend = TRUE, alpha=0.5) +
     scale_x_discrete(limits=unique(aux$predicted[order(aux$Freq)])) +
-    theme(legend.position="top") + ggtitle("Matriz de confusión")
+    theme(legend.position="top") + ggtitle("Matriz de confusion")
 grid.arrange(impo, conf, ncol=2, widths=c(1.3, 1))
 
 # Error en la predicción
@@ -1007,7 +1032,7 @@ aux<- as.data.frame(my_mod_2$confusion.matrix)
 conf<- ggplot(data=aux, aes(x=true, y=Freq, fill=predicted))+
     geom_bar(stat="identity", color="black", show.legend = TRUE, alpha=0.5) +
     scale_x_discrete(limits=unique(aux$predicted[order(aux$Freq)])) +
-    theme(legend.position="top") + ggtitle("Matriz de confusión")
+    theme(legend.position="top") + ggtitle("Matriz de confusion")
 grid.arrange(impo, conf, ncol=2, widths=c(1.3, 1))
 
 # Error en la predicción
@@ -1058,7 +1083,179 @@ Ya vemos que en cada caso importan unas variables y no otras. En general la clas
 
 Hemos vuelto a superar nuestra nota, un **_82'22%_** ya acariciamos el techo del *Leaderboard*. ¿Dará tiempo a un último intento?...
 
-## 6º Sprint - Ensamblado
+## 7º Sprint - Ensamblado
+Este es el último _sprint_ y el reloj corre en nuestra contra. La idea es incorporar la librería `vtreat` que automatiza el tratamiento de datos y usar los 3 modelos posibles que podemos construir basados en el anterior, es decir, el que primero disingue `functional` de las demás, el que primero distingue `non functional` y el que primero distingue `functional needs repair`. Como los datos se van a ver modificados reharemos los 3.
+```{r eval=FALSE}
+# 0. Libraries
+library(data.table)
+library(dplyr)
+library(ranger)
+library(ggplot2)
+library(ggmosaic)
+library(gridExtra)
+library(vtreat)
+source("funciones.R")
+
+# 1. Load data ----
+datTotal<- readRDS("./dat/datTotal_3")
+datY<- as.data.frame(fread("./dat/rawTrain_y.csv"))
+submiss<- as.data.frame(fread("./dat/SubmissionFormat.csv"))
+datTrain<- inner_join(datTotal, datY)
+datTest<- datTotal[datTotal$id %in% submiss$id,]
+
+# 1.1 Data treatment using vtreat ----
+x_names <- c("funder", "installer", "wpt_name", "basin", "subvillage", "region", 
+             "lga", "ward", "scheme_management", "scheme_name", "extraction_type", 
+             "extraction_type_group", "extraction_type_class", "management", 
+             "management_group", "payment_type", "water_quality", "quality_group", 
+             "quantity", "quantity_group", "source", "source_type", "source_class", 
+             "waterpoint_type", "waterpoint_type_group", "id", "gps_height", 
+             "longitude", "latitude", "region_code", "district_code", "population", 
+             "construction_year", "public_meeting", "permit", "num_private_bin", 
+             "amount_tsh_bin", "year_recorded", "month_recorded", "day_recorded", 
+             "regcode_by_region", "region_by_regcode", "distcode_by_subv", 
+             "subv_by_distcode")
+y_name <- "status_group"
+
+# build the multi-class cross frame and treatments
+cfe_m <- mkCrossFrameMExperiment(datTrain, x_names, y_name)
+# Look at the new data, we have 256 variables
+str(cfe_m$cross_frame)
+# Treat the complete dataset
+datTotal<- prepare(cfe_m$treat_m, datTotal)
+names(datTotal)
+saveRDS(datTotal, "./dat/datTotal_4")
+```
+
+Para usar la librería `vtreat` hemos seguido [este documento](https://cran.r-project.org/web/packages/vtreat/vignettes/MultiClassVtreat.html) y hemos pasado de 44 a 255 variables. Le entran a uno ganas de probar un árbol sobre estos datos pero quiero llevar el _sprint_ hasta el final.
+
+Lo siguiente ha sido generar los 6 modelos (2 por caso) y hacer las predicciones pertinentes.
+```{r eval=FALSE}
+# 2. Models ----
+# Define the possible objective class
+posibilities<- c("functional", "non functional", "functional needs repair")
+predictionsDF<- data.frame(row.names = seq(1:nrow(datTest)))
+for(obj in posibilities){
+    others = posibilities[which(posibilities != obj)]
+    # Generate each case data
+    datY_1<- data.frame(id = datY$id,
+                        y = ifelse(datY$status_group == obj, obj, "other"))
+    datY_2<- data.frame(id = datY_1$id[which(datY_1$y == "other")],
+                        y = ifelse(datY$status_group[which(datY_1$y == "other")] == others[1],
+                                   others[1], others[2]))
+    datTrain_1<- inner_join(datTotal, datY_1)
+    datTrain_2<- inner_join(datTotal, datY_2)
+    datTrain_1$y<- as.factor(datTrain_1$y)
+    datTrain_2$y<- as.factor(datTrain_2$y)
+    datTest<- datTotal[datTotal$id %in% submiss$id,]
+    frml<- as.formula(paste("y ~", paste(names(datTotal), collapse="+")))
+    set.seed(1234)
+    # 2.1 First model ----
+    my_mod_1<- ranger(frml,
+                      data = datTrain_1,
+                      importance = "impurity")
+    print(paste(obj, " - 1. Error predicciones: ", my_mod_1$prediction.error, sep = ""))
+    saveRDS(my_mod_1, paste("./mod/V07_ranger_1_",obj, sep = ""))
+    # 2.2 Second model ----
+    my_mod_2<- ranger(frml,
+                      data = datTrain_2,
+                      importance = "impurity")
+    print(paste(obj, " - 2. Error predicciones: ", my_mod_2$prediction.error, sep = ""))
+    saveRDS(my_mod_2, paste("./mod/V07_ranger_2_",obj, sep = ""))
+    
+    # 3. Prediction ----
+    # Step 1
+    predicted<- predict(my_mod_1, datTest)
+    pred_1<- data.frame(id=datTest$id,
+                        status_group = predicted$predictions)
+    # Step 2
+    datTest_2<- datTest[which(pred_1$status_group == "other"),]
+    predicted<- predict(my_mod_2, datTest_2)
+    pred_2<- data.frame(id=datTest_2$id,
+                        status_group = predicted$predictions)
+    aux<- rbind(pred_1[pred_1$status_group == obj,], pred_2)
+    # Final pred
+    pred<- inner_join(submiss, aux, by="id")[,c(1,3)]
+    pred$status_group<- pred$status_group.y
+    pred$status_group.y<- NULL
+    # Checkeo tontorrón
+    print(paste("Train proportion: ",
+                length(which(datTrain_1$y == obj))/nrow(datTrain_1), sep="")
+    )
+    print(paste("Test proportion: ",
+                length(which(pred$status_group == obj))/nrow(pred), sep="")
+    )
+    # 3.1 Join Results ----
+    predictionsDF[[paste(obj,"_id",sep="")]] <- pred$id
+    predictionsDF[[obj]] <- pred$status_group
+} 
+```
+
+En general la tasa de errores es bastante baja, pero mayor a la que observamos en el _sprint_ anterior. Subi las predicciones del modelo asociado a la clase `functional` y obtuve un pobre _**81'27%**_ y con el asociado a `functional needs repair` __*81'58%*__. Pensándolo ahora en frío tal vez esto debió disuadirme de continuar, pero pocas cosas hay más tercas que yo mismo. Teniendo las predicciones de los 3 (6) modelos hice la clásica votación, seleccioné la clase más votada en cada caso y de aquellos en que cada modelo había dicho una cosa (había únicamente 15) elegí la predicción hecha por el modelo asociado a `non functional`. Con estos criterios me dispuse a hacer mi última predicción (la 3º del día de la entrega).
+```{r eval=FALSE}
+# Checking they have all the same ids ----
+all(predictionsDF$functional_id == predictionsDF$`non functional_id`) # TRUE
+all(predictionsDF$functional_id == predictionsDF$`functional needs repair_id`) # TRUE
+
+# 4. Ensemble ----
+# Split individual dfs 
+pred<- predictionsDF[,c(1,2)]
+pred_functional<- pred %>%
+    rename(status_group = functional) %>%
+    rename(id = functional_id)
+pred<- predictionsDF[,c(3,4)]
+pred_non_functional<- pred %>%
+    rename(status_group = `non functional`) %>%
+    rename(id = `non functional_id`)
+pred<- predictionsDF[,c(5,6)]
+pred_functional_needs_repair<- pred %>%
+    rename(status_group = `functional needs repair`) %>%
+    rename(id = `functional needs repair_id`)
+
+# Save individuals
+fwrite(pred_functional, "./sub/V07_ranger_functional.csv")
+fwrite(pred_non_functional, "./sub/V07_ranger_non_functional.csv")
+fwrite(pred_functional_needs_repair, "./sub/V07_ranger_functional_needs_repair.csv")
+
+# 4.1 Use the most upvoted class ----
+pred_to_melt<- data.frame(id = pred_functional$id,
+                          status_group_f = pred_functional$status_group,
+                          status_group_nf = pred_non_functional$status_group,
+                          status_group_fnr = pred_functional_needs_repair$status_group)
+aux<- melt(pred_to_melt, id.vars="id")
+aux$variable<- NULL
+length(unique(aux$id))
+upvoted<- as.data.frame(aux %>%
+                            add_count(id, value) %>% 
+                            filter(n > 1) %>%
+                            distinct(id, value)
+)
+onevoted<- as.vector(aux %>%
+                         add_count(id, value) %>% 
+                         filter(n == 1) %>%
+                         distinct(id) %>% 
+                         select(id)
+)
+noclue<- anti_join(onevoted, upvoted)
+# For the 15 rows that models differs we trust non functional which seems to be the best 
+aux<- data.frame(id = noclue,
+                 value = pred_non_functional$status_group[pred_non_functional$id %in% noclue$id])
+voted<- rbind(upvoted, aux)
+predFin<- data.frame(id = pred_functional$id)
+predFin$status_group<- voted$value[match(predFin$id, voted$id)]
+# Check
+predFin$id[!(predFin$status_group %in% posibilities)]
+
+# Write submission
+fwrite(predFin, "./sub/V07_ensemble.csv")
+```
+<center>
+<img src="./img/V07_score.png" width="50%">
+<figcaption>Puntuación modelo ensamblado</figcaption>
+</center>
+<br>
+
+Tremendo batacazo. Regresamos a números del 4º _sprint_, _**81'80%**_. Claramente esta estrategia requiere de cierto perfeccionamiento. Posiblemente la ponderación, la consideración de la etapa a la que corresponde la predicción o incluso el uso de un único modelo, ya que los datos están preparados para esto, habrían supuesto un avance.
 
 # Conclusiones
 Ha sido una experiencia muy estimulante la de entrar en una competición de estas con la metodología que está más en boga y compitiendo entre nosotros. Enhorabuena Carlos porque eres capaz de transmitir todo lo que nos queda por aprender (yo al empezar el máster desconocía totalmente Vim y R y mucho de la parte teórica) y lo divertido que puede llegar a ser dedicarse a esto.
@@ -1066,56 +1263,4 @@ Ha sido una experiencia muy estimulante la de entrar en una competición de esta
 Si te estás preguntando que ha pasado en el grupo, o por qué las entregas (al menos la mía) son personales, pregúntame y te escribo un correo, pero no seré yo quien saque el tema.
 
 ¡Muchas gracias!
-
-```{r echo=FALSE}
-
-```
-
-
-```{r echo=FALSE}
-
-```
-
-```{r eval=FALSE}
-
-```
-```{r echo=FALSE}
-
-```
-
-```{r eval=FALSE}
-
-```
-```{r echo=FALSE}
-
-```
-
-```{r eval=FALSE}
-
-```
-```{r echo=FALSE}
-
-```
-
-```{r eval=FALSE}
-
-```
-```{r echo=FALSE}
-
-```
-
-```{r eval=FALSE}
-
-```
-```{r echo=FALSE}
-
-```
-
-```{r eval=FALSE}
-
-```
-```{r echo=FALSE}
-
-```
-
-
+<br>

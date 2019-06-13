@@ -3,7 +3,7 @@
 # Etapa: Primer modelo
 # Característica: RandomForest - RANGER
 # Resultado: 0.8211
-# Fecha: 11-06-2019
+# Fecha: 12-06-2019
 ###########################################################
 
 setwd("C:\\Users/n230104/Desktop/personal/master/BD_empresa/") # Work

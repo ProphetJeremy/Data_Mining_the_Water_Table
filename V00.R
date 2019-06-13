@@ -79,8 +79,6 @@ rownames(aux)<- varResume$name
 datTotal<- cbind(datTotal_cha, datTotal_num, datTotal_boo)
 datTotal$recorded_by<- NULL
 saveRDS(datTotal, "./dat/datTotal")
-saveRDS(cbind(datY, datTotal[c(1:nrow(datTrain)),]), "./dat/datTrain")
-saveRDS(datTotal[c((nrow(datTrain)+1):nrow(datTotal)),], "./dat/datTest")
 
 # 1.3 Limpieza alto nivel ---
 datZero<- datTotal[,varResume$name[varResume$Tratamiento=="NO"]]
